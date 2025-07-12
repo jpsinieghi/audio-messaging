@@ -33,6 +33,11 @@ export default function UserDashboard({ onLogout }) {
       setMessages(response.data);
     } catch (error) {
       console.error('Failed to load messages:', error);
+      // Don't show error if user is logging out or token is invalid
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        // Token is invalid, user will be redirected to login
+        return;
+      }
       Alert.alert('Error', 'Failed to load messages');
     }
   };
@@ -125,7 +130,32 @@ export default function UserDashboard({ onLogout }) {
     }
   };
 
+  const deleteMessage = async (messageId) => {
+    Alert.alert(
+      'Delete Message',
+      'Are you sure you want to delete this message?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await audioAPI.deleteMessage(messageId);
+              loadMessages();
+              Alert.alert('Success', 'Message deleted successfully');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete message');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const logout = async () => {
+    // Clear any ongoing intervals
+    setMessages([]);
     await AsyncStorage.clear();
     onLogout();
   };
@@ -159,9 +189,17 @@ export default function UserDashboard({ onLogout }) {
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={styles.messageItem}>
-              <Text style={styles.messageTime}>
-                {new Date(item.timestamp).toLocaleString()}
-              </Text>
+              <View style={styles.messageHeader}>
+                <Text style={styles.messageTime}>
+                  {new Date(item.timestamp).toLocaleString()}
+                </Text>
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => deleteMessage(item.id)}
+                >
+                  <Text style={styles.deleteButtonText}>✕</Text>
+                </TouchableOpacity>
+              </View>
               {item.filename && (
                 <TouchableOpacity
                   style={styles.playButton}
@@ -170,11 +208,11 @@ export default function UserDashboard({ onLogout }) {
                   <Text>▶️ Play Your Message</Text>
                 </TouchableOpacity>
               )}
-              {!item.filename && item.responded && (
-                <Text style={styles.messageDeleted}>Message processed by moderator</Text>
-              )}
               {item.responded && (
                 <View>
+                  {item.moderator_name && (
+                    <Text style={styles.moderatorName}>Response from: {item.moderator_name}</Text>
+                  )}
                   {item.response_filename && (
                     <TouchableOpacity
                       style={styles.responseButton}
@@ -267,10 +305,28 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
   },
+  messageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   messageTime: {
     fontSize: 12,
     color: '#666',
-    marginBottom: 10,
+  },
+  deleteButton: {
+    backgroundColor: '#FF3B30',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   playButton: {
     backgroundColor: '#34C759',
@@ -309,5 +365,11 @@ const styles = StyleSheet.create({
     color: '#999',
     fontStyle: 'italic',
     padding: 10,
+  },
+  moderatorName: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: 'bold',
+    marginBottom: 5,
   },
 });

@@ -29,6 +29,7 @@ export const audioAPI = {
   }),
   respondWithText: (id, textResponse) => api.post(`/audio/respond-text/${id}`, { textResponse }),
   getAudioUrl: (s3Key) => api.get(`/audio/play/${s3Key}`),
+  deleteMessage: (id) => api.delete(`/audio/message/${id}`),
 };
 
 export default api;
