@@ -103,11 +103,14 @@ export default function UserDashboard({ onLogout }) {
   const playAudio = async (filename) => {
     try {
       console.log('Playing audio:', filename);
-      const uri = `http://192.168.1.4:3000/uploads/${filename}`;
-      console.log('Audio URI:', uri);
+      
+      // Get signed URL from backend
+      const response = await audioAPI.getAudioUrl(filename);
+      const audioUrl = response.data.url;
+      console.log('Audio URL:', audioUrl);
       
       const { sound } = await Audio.Sound.createAsync(
-        { uri },
+        { uri: audioUrl },
         { shouldPlay: true }
       );
       

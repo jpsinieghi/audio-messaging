@@ -28,6 +28,7 @@ export const audioAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   respondWithText: (id, textResponse) => api.post(`/audio/respond-text/${id}`, { textResponse }),
+  getAudioUrl: (s3Key) => api.get(`/audio/play/${s3Key}`),
 };
 
 export default api;

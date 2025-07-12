@@ -17,8 +17,12 @@ export default function ResponseScreen({ route, navigation }) {
     }
     
     try {
+      // Get signed URL from backend
+      const response = await audioAPI.getAudioUrl(message.filename);
+      const audioUrl = response.data.url;
+      
       const { sound } = await Audio.Sound.createAsync(
-        { uri: `http://192.168.1.4:3000/uploads/${message.filename}` },
+        { uri: audioUrl },
         { shouldPlay: true }
       );
       
