@@ -33,6 +33,11 @@ export default function UserDashboard({ onLogout }) {
       setMessages(response.data);
     } catch (error) {
       console.error('Failed to load messages:', error);
+      // Don't show error if user is logging out or token is invalid
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        // Token is invalid, user will be redirected to login
+        return;
+      }
       Alert.alert('Error', 'Failed to load messages');
     }
   };
@@ -126,6 +131,8 @@ export default function UserDashboard({ onLogout }) {
   };
 
   const logout = async () => {
+    // Clear any ongoing intervals
+    setMessages([]);
     await AsyncStorage.clear();
     onLogout();
   };
