@@ -30,6 +30,14 @@ const initDB = async () => {
       WHERE table_schema = 'public' AND table_name IN ('users', 'audio_messages')
     `);
     
+    // Make filename column nullable if table exists
+    try {
+      await pool.query('ALTER TABLE audio_messages ALTER COLUMN filename DROP NOT NULL');
+      console.log('Updated filename column to allow NULL values');
+    } catch (alterError) {
+      console.log('Filename column already nullable or table does not exist');
+    }
+    
     if (tablesExist.rows.length < 2) {
       console.log('Tables do not exist. Please create them manually or grant CREATE permissions.');
       console.log('Required SQL:');
@@ -45,7 +53,7 @@ const initDB = async () => {
           id SERIAL PRIMARY KEY,
           user_id INTEGER REFERENCES users(id),
           username VARCHAR(50) NOT NULL,
-          filename VARCHAR(255) NOT NULL,
+          filename VARCHAR(255),
           timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           responded BOOLEAN DEFAULT FALSE,
           response_filename VARCHAR(255),

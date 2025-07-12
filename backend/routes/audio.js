@@ -95,13 +95,26 @@ router.post('/respond/:id', authenticateToken, handleUpload, async (req, res) =>
 
   try {
     const messageId = parseInt(req.params.id);
+    
+    // Get the original message to delete the user's audio file
+    const originalMessage = await pool.query('SELECT filename FROM audio_messages WHERE id = $1', [messageId]);
+    
     const result = await pool.query(
-      'UPDATE audio_messages SET responded = true, response_filename = $1, response_timestamp = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      'UPDATE audio_messages SET responded = true, response_filename = $1, response_timestamp = CURRENT_TIMESTAMP, filename = NULL WHERE id = $2 RETURNING *',
       [req.file.filename, messageId]
     );
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Message not found' });
+    }
+    
+    // Delete the user's audio file
+    if (originalMessage.rows[0]?.filename) {
+      const filePath = path.join(uploadsDir, originalMessage.rows[0].filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log('Deleted user audio file:', originalMessage.rows[0].filename);
+      }
     }
     
     res.json({ message: 'Response sent successfully' });
@@ -112,6 +125,8 @@ router.post('/respond/:id', authenticateToken, handleUpload, async (req, res) =>
 });
 
 router.post('/respond-text/:id', authenticateToken, async (req, res) => {
+  console.log('Text response request:', { messageId: req.params.id, body: req.body, user: req.user });
+  
   if (req.user.role !== 'moderator') {
     return res.status(403).json({ error: 'Only moderators can respond' });
   }
@@ -120,13 +135,27 @@ router.post('/respond-text/:id', authenticateToken, async (req, res) => {
     const messageId = parseInt(req.params.id);
     const { textResponse } = req.body;
     
+    console.log('Processing text response:', { messageId, textResponse });
+    
+    // Get the original message to delete the user's audio file
+    const originalMessage = await pool.query('SELECT filename FROM audio_messages WHERE id = $1', [messageId]);
+    
     const result = await pool.query(
-      'UPDATE audio_messages SET responded = true, text_response = $1, response_timestamp = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      'UPDATE audio_messages SET responded = true, text_response = $1, response_timestamp = CURRENT_TIMESTAMP, filename = NULL WHERE id = $2 RETURNING *',
       [textResponse, messageId]
     );
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Message not found' });
+    }
+    
+    // Delete the user's audio file
+    if (originalMessage.rows[0]?.filename) {
+      const filePath = path.join(uploadsDir, originalMessage.rows[0].filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log('Deleted user audio file:', originalMessage.rows[0].filename);
+      }
     }
     
     res.json({ message: 'Text response sent successfully' });

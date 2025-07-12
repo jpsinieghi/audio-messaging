@@ -159,12 +159,17 @@ export default function UserDashboard({ onLogout }) {
               <Text style={styles.messageTime}>
                 {new Date(item.timestamp).toLocaleString()}
               </Text>
-              <TouchableOpacity
-                style={styles.playButton}
-                onPress={() => playAudio(item.filename)}
-              >
-                <Text>▶️ Play Your Message</Text>
-              </TouchableOpacity>
+              {item.filename && (
+                <TouchableOpacity
+                  style={styles.playButton}
+                  onPress={() => playAudio(item.filename)}
+                >
+                  <Text>▶️ Play Your Message</Text>
+                </TouchableOpacity>
+              )}
+              {!item.filename && item.responded && (
+                <Text style={styles.messageDeleted}>Message processed by moderator</Text>
+              )}
               {item.responded && (
                 <View>
                   {item.response_filename && (
@@ -295,5 +300,11 @@ const styles = StyleSheet.create({
   },
   textResponse: {
     color: '#666',
+  },
+  messageDeleted: {
+    textAlign: 'center',
+    color: '#999',
+    fontStyle: 'italic',
+    padding: 10,
   },
 });

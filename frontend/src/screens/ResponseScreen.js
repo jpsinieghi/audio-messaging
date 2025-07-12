@@ -11,6 +11,11 @@ export default function ResponseScreen({ route, navigation }) {
   const [loading, setLoading] = useState(false);
 
   const playAudio = async () => {
+    if (!message.filename) {
+      Alert.alert('Info', 'Audio file no longer available');
+      return;
+    }
+    
     try {
       const { sound } = await Audio.Sound.createAsync(
         { uri: `http://192.168.1.4:3000/uploads/${message.filename}` },
@@ -35,12 +40,15 @@ export default function ResponseScreen({ route, navigation }) {
 
     setLoading(true);
     try {
+      console.log('Sending text response:', { messageId: message.id, textResponse });
       await audioAPI.respondWithText(message.id, textResponse);
       Alert.alert('Success', 'Text response sent!', [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to send text response');
+      console.error('Text response error:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.error || 'Failed to send text response';
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -126,9 +134,13 @@ export default function ResponseScreen({ route, navigation }) {
         <Text style={styles.messageTime}>
           {new Date(message.timestamp).toLocaleString()}
         </Text>
-        <TouchableOpacity style={styles.playButton} onPress={playAudio}>
-          <Text style={styles.playButtonText}>▶️ Play Message</Text>
-        </TouchableOpacity>
+        {message.filename ? (
+          <TouchableOpacity style={styles.playButton} onPress={playAudio}>
+            <Text style={styles.playButtonText}>▶️ Play Message</Text>
+          </TouchableOpacity>
+        ) : (
+          <Text style={styles.noAudioText}>Audio no longer available</Text>
+        )}
       </View>
 
       <View style={styles.responseSection}>
@@ -259,5 +271,11 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  noAudioText: {
+    textAlign: 'center',
+    color: '#999',
+    fontStyle: 'italic',
+    padding: 15,
   },
 });

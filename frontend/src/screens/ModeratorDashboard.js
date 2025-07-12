@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, FlatList } from 'react
 import { Audio } from 'expo-av';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { audioAPI } from '../services/api';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ModeratorDashboard({ onLogout, navigation }) {
   const [messages, setMessages] = useState([]);
@@ -13,8 +14,13 @@ export default function ModeratorDashboard({ onLogout, navigation }) {
 
   useEffect(() => {
     loadUsername();
-    loadMessages();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadMessages();
+    }, [])
+  );
 
   const loadUsername = async () => {
     const user = await AsyncStorage.getItem('username');
@@ -24,22 +30,15 @@ export default function ModeratorDashboard({ onLogout, navigation }) {
   const loadMessages = async () => {
     try {
       const response = await audioAPI.getMessages();
-      setMessages(response.data);
+      // Filter out messages that have been responded to
+      const unrespondedMessages = response.data.filter(msg => !msg.responded);
+      setMessages(unrespondedMessages);
     } catch (error) {
       console.error('Failed to load messages:', error);
     }
   };
 
-  const playAudio = async (filename) => {
-    try {
-      const { sound } = await Audio.Sound.createAsync({
-        uri: `http://192.168.1.4:3000/uploads/${filename}`,
-      });
-      await sound.playAsync();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to play audio');
-    }
-  };
+
 
   const startRecording = async () => {
     if (!selectedMessage) {
@@ -123,12 +122,9 @@ export default function ModeratorDashboard({ onLogout, navigation }) {
               <Text style={styles.messageTime}>
                 {new Date(item.timestamp).toLocaleString()}
               </Text>
-              <TouchableOpacity
-                style={styles.playButton}
-                onPress={() => playAudio(item.filename)}
-              >
-                <Text>▶️ Play Message</Text>
-              </TouchableOpacity>
+              {!item.filename && (
+                <Text style={styles.messageProcessed}>Message already processed</Text>
+              )}
               {item.responded && (
                 <Text style={styles.respondedText}>✅ Responded</Text>
               )}
@@ -237,5 +233,11 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  messageProcessed: {
+    textAlign: 'center',
+    color: '#999',
+    fontStyle: 'italic',
+    padding: 8,
   },
 });
