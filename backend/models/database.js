@@ -65,20 +65,32 @@ const initDB = async () => {
 
     // Insert default users if they don't exist
     try {
-      const adminExists = await pool.query('SELECT id FROM users WHERE username = $1', ['admin']);
-      if (adminExists.rows.length === 0) {
-        await pool.query(
-          'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)',
-          ['admin', bcrypt.hashSync('admin123', 10), 'moderator']
-        );
-      }
+      const defaultUsers = [
+        // Admins
+        { username: 'admin', password: 'admin123', role: 'moderator' },
+        { username: 'admin2', password: 'admin123', role: 'moderator' },
+        { username: 'admin3', password: 'admin123', role: 'moderator' },
+        { username: 'admin4', password: 'admin123', role: 'moderator' },
+        // Users
+        { username: 'user1', password: 'user123', role: 'user' },
+        { username: 'user2', password: 'user123', role: 'user' },
+        { username: 'user3', password: 'user123', role: 'user' },
+        { username: 'user4', password: 'user123', role: 'user' },
+        { username: 'user5', password: 'user123', role: 'user' },
+        { username: 'user6', password: 'user123', role: 'user' },
+        { username: 'user7', password: 'user123', role: 'user' },
+        { username: 'user8', password: 'user123', role: 'user' },
+        { username: 'user9', password: 'user123', role: 'user' }
+      ];
 
-      const userExists = await pool.query('SELECT id FROM users WHERE username = $1', ['user1']);
-      if (userExists.rows.length === 0) {
-        await pool.query(
-          'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)',
-          ['user1', bcrypt.hashSync('user123', 10), 'user']
-        );
+      for (const user of defaultUsers) {
+        const userExists = await pool.query('SELECT id FROM users WHERE username = $1', [user.username]);
+        if (userExists.rows.length === 0) {
+          await pool.query(
+            'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)',
+            [user.username, bcrypt.hashSync(user.password, 10), user.role]
+          );
+        }
       }
       
       console.log('Database initialized successfully');
