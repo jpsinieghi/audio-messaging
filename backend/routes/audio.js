@@ -148,6 +148,55 @@ router.get('/play/*', authenticateToken, async (req, res) => {
   }
 });
 
+// Delete message endpoint for users
+router.delete('/message/:id', authenticateToken, async (req, res) => {
+  try {
+    const messageId = parseInt(req.params.id);
+    
+    // Get message to verify ownership and get filenames
+    const message = await pool.query('SELECT * FROM audio_messages WHERE id = $1 AND user_id = $2', [messageId, req.user.id]);
+    
+    if (message.rows.length === 0) {
+      return res.status(404).json({ error: 'Message not found or not authorized' });
+    }
+    
+    const messageData = message.rows[0];
+    
+    // Delete audio files from S3 if they exist
+    if (messageData.filename) {
+      try {
+        await s3.deleteObject({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: messageData.filename
+        }).promise();
+        console.log('Deleted user audio file from S3:', messageData.filename);
+      } catch (deleteError) {
+        console.error('Error deleting user S3 file:', deleteError);
+      }
+    }
+    
+    if (messageData.response_filename) {
+      try {
+        await s3.deleteObject({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: messageData.response_filename
+        }).promise();
+        console.log('Deleted response audio file from S3:', messageData.response_filename);
+      } catch (deleteError) {
+        console.error('Error deleting response S3 file:', deleteError);
+      }
+    }
+    
+    // Delete the message from database
+    await pool.query('DELETE FROM audio_messages WHERE id = $1', [messageId]);
+    
+    res.json({ message: 'Message deleted successfully' });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to delete message' });
+  }
+});
+
 router.post('/respond-text/:id', authenticateToken, async (req, res) => {
   console.log('Text response request:', { messageId: req.params.id, body: req.body, user: req.user });
   
