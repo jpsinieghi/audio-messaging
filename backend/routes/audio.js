@@ -102,8 +102,8 @@ router.post('/respond/:id', authenticateToken, handleUpload, async (req, res) =>
     const originalMessage = await pool.query('SELECT filename FROM audio_messages WHERE id = $1', [messageId]);
     
     const result = await pool.query(
-      'UPDATE audio_messages SET responded = true, response_filename = $1, response_timestamp = CURRENT_TIMESTAMP, filename = NULL WHERE id = $2 RETURNING *',
-      [req.file.key, messageId]
+      'UPDATE audio_messages SET responded = true, response_filename = $1, response_timestamp = CURRENT_TIMESTAMP, filename = NULL, moderator_name = $3 WHERE id = $2 RETURNING *',
+      [req.file.key, messageId, req.user.username]
     );
     
     if (result.rows.length === 0) {
@@ -165,8 +165,8 @@ router.post('/respond-text/:id', authenticateToken, async (req, res) => {
     const originalMessage = await pool.query('SELECT filename FROM audio_messages WHERE id = $1', [messageId]);
     
     const result = await pool.query(
-      'UPDATE audio_messages SET responded = true, text_response = $1, response_timestamp = CURRENT_TIMESTAMP, filename = NULL WHERE id = $2 RETURNING *',
-      [textResponse, messageId]
+      'UPDATE audio_messages SET responded = true, text_response = $1, response_timestamp = CURRENT_TIMESTAMP, filename = NULL, moderator_name = $3 WHERE id = $2 RETURNING *',
+      [textResponse, messageId, req.user.username]
     );
     
     if (result.rows.length === 0) {

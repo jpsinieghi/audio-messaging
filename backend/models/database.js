@@ -38,6 +38,14 @@ const initDB = async () => {
       console.log('Filename column already nullable or table does not exist');
     }
     
+    // Add moderator_name column if it doesn't exist
+    try {
+      await pool.query('ALTER TABLE audio_messages ADD COLUMN IF NOT EXISTS moderator_name VARCHAR(50)');
+      console.log('Added moderator_name column');
+    } catch (alterError) {
+      console.log('Moderator_name column already exists or table does not exist');
+    }
+    
     if (tablesExist.rows.length < 2) {
       console.log('Tables do not exist. Please create them manually or grant CREATE permissions.');
       console.log('Required SQL:');
@@ -58,7 +66,8 @@ const initDB = async () => {
           responded BOOLEAN DEFAULT FALSE,
           response_filename VARCHAR(255),
           response_timestamp TIMESTAMP,
-          text_response TEXT
+          text_response TEXT,
+          moderator_name VARCHAR(50)
         );
       `);
     }

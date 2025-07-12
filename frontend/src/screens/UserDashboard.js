@@ -177,11 +177,11 @@ export default function UserDashboard({ onLogout }) {
                   <Text>▶️ Play Your Message</Text>
                 </TouchableOpacity>
               )}
-              {!item.filename && item.responded && (
-                <Text style={styles.messageDeleted}>Message processed by moderator</Text>
-              )}
               {item.responded && (
                 <View>
+                  {item.moderator_name && (
+                    <Text style={styles.moderatorName}>Response from: {item.moderator_name}</Text>
+                  )}
                   {item.response_filename && (
                     <TouchableOpacity
                       style={styles.responseButton}
@@ -316,5 +316,11 @@ const styles = StyleSheet.create({
     color: '#999',
     fontStyle: 'italic',
     padding: 10,
+  },
+  moderatorName: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: 'bold',
+    marginBottom: 5,
   },
 });
