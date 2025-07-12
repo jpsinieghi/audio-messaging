@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authAPI } from '../services/api';
 
@@ -37,7 +37,8 @@ export default function LoginScreen({ onLogin }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.logo}>🎵 AudioChat</Text>
+      <Image source={require('../assets/cn1.png')} style={styles.logoImage} />
+      <Text style={styles.logo}>🙏 Pedido de Oração</Text>
       <Text style={styles.title}>Login</Text>
       
       <TextInput
@@ -82,8 +83,15 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f5f5f5',
   },
+  logoImage: {
+    width: 120,
+    height: 120,
+    alignSelf: 'center',
+    marginBottom: 20,
+    resizeMode: 'contain',
+  },
   logo: {
-    fontSize: 48,
+    fontSize: 30,
     textAlign: 'center',
     marginBottom: 20,
   },
