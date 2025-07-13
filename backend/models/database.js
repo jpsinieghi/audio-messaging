@@ -46,6 +46,22 @@ const initDB = async () => {
       console.log('Moderator_name column already exists or table does not exist');
     }
     
+    // Add email column to users table if it doesn't exist
+    try {
+      await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) UNIQUE');
+      console.log('Added email column to users table');
+    } catch (alterError) {
+      console.log('Email column already exists or table does not exist');
+    }
+    
+    // Add name column to users table if it doesn't exist
+    try {
+      await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)');
+      console.log('Added name column to users table');
+    } catch (alterError) {
+      console.log('Name column already exists or table does not exist');
+    }
+    
     if (tablesExist.rows.length < 2) {
       console.log('Tables do not exist. Please create them manually or grant CREATE permissions.');
       console.log('Required SQL:');
@@ -53,6 +69,8 @@ const initDB = async () => {
         CREATE TABLE users (
           id SERIAL PRIMARY KEY,
           username VARCHAR(50) UNIQUE NOT NULL,
+          name VARCHAR(100),
+          email VARCHAR(100) UNIQUE,
           password VARCHAR(255) NOT NULL,
           role VARCHAR(20) NOT NULL
         );

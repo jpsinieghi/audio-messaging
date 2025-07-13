@@ -17,6 +17,7 @@ api.interceptors.request.use(async (config) => {
 
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
+  register: (userData) => api.post('/auth/register', userData),
 };
 
 export const audioAPI = {
