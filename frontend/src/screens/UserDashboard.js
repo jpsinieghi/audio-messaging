@@ -21,8 +21,9 @@ export default function UserDashboard({ onLogout }) {
   }, []);
 
   const loadUsername = async () => {
-    const user = await AsyncStorage.getItem('username');
-    setUsername(user);
+    const userName = await AsyncStorage.getItem('userName');
+    const userEmail = await AsyncStorage.getItem('username');
+    setUsername(userName || userEmail);
   };
 
   const loadMessages = async () => {
